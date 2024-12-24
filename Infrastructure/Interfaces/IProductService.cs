@@ -10,5 +10,7 @@ public interface IProductService
     Task<Response<bool>> CreateAsync(Product product);
     Task<Response<bool>> UpdateAsync( Product product);
     Task<Response<bool>> DeleteAsync(int id);
-    // Task<Response<List<Product>>> ExportAsync(string query);
+    Task<Response<string>> ExportAsync();
+    Task<Response<string>> ImportAsync();
+    Task<Response<string>> UpdateByFileAsync();
 }

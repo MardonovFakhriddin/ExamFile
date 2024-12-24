@@ -23,7 +23,7 @@ public class ProductController(IProductService productService) :ControllerBase
     }
 
     [HttpPost]
-    public async Task<Response<Product>> CreateAsync(Product product)
+    public async Task<Response<bool>> CreateAsync(Product product)
     {
         var response = await productService.CreateAsync(product);
         return response;
@@ -38,6 +38,27 @@ public class ProductController(IProductService productService) :ControllerBase
     public async Task<Response<bool>> DeleteAsync(int id)
     {
         var response = await productService.DeleteAsync(id);
+        return response;
+    }
+
+    [HttpGet("export")]
+    public async Task<Response<string>> ExportAsync()
+    {
+        var response = await productService.ExportAsync();
+        return response;
+    }
+
+    [HttpGet("import")]
+    public async Task<Response<string>> ImportAsync()
+    {
+        var response = await productService.ImportAsync();
+        return response;
+    }
+
+    [HttpPut("update-by-file")]
+    public async Task<Response<string>> UpdateByFileAsync()
+    {
+        var response = await productService.UpdateByFileAsync();
         return response;
     }
 

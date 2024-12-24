@@ -1,3 +1,4 @@
+using System.Net;
 using Dapper;
 using Domain.Models;
 using Infrastructure.ApiResponses;
@@ -96,4 +97,92 @@ public class ProductService(IContext context) : IProductService
         }
     }
 
+    public async Task<Response<string>> ExportAsync()
+    {
+        const string cmd = "select * from products";
+        var products = await context.Connection().QueryAsync<Product>(cmd);
+        const string path = "\"C:\\Users\\Fahriddin\\Desktop\\FileExam\\export.txt\"";
+        if (File.Exists(path))
+        {
+            File.Delete(path);
+        }
+
+        foreach (var product in products.ToList())
+        {
+            var txt =
+                $"{product.ProductId},{product.Name}.{product.Description},{product.Price},{product.StockQuantity},{product.CategoryName},{product.CreatedDate}\n";
+            await File.AppendAllTextAsync(path, txt);
+        }
+        return new Response<string>("Products exported successfully");
+
+    }
+
+    public async Task<Response<string>> ImportAsync()
+    {
+        const string path = "\"C:\\Users\\Fahriddin\\Desktop\\FileExam\\add.txt\"";
+        if (File.Exists(path) == false)
+        {
+            return new Response<string>(HttpStatusCode.NotFound, "File not found");
+        }
+        var lines = await File.ReadAllLinesAsync(path);
+        if (lines.Length == 0)
+        {
+            return new Response<string>(HttpStatusCode.BadRequest, "File is empty");
+        }
+        var cnt = 0;
+        foreach (var line in lines)
+        {
+            var lineSplit = line.Split(",");
+            var product = new Product()
+            {
+                ProductId = int.Parse(lineSplit[0]),
+                Name = lineSplit[1],
+                Description = lineSplit[2],
+                Price = decimal.Parse(lineSplit[3]),
+                StockQuantity = int.Parse(lineSplit[4]),
+                CategoryName = lineSplit[5],
+                CreatedDate = DateTime.Parse(lineSplit[6])
+            };
+            const string cmd =
+                "INSERT INTO Products (Name=@Name,Description=@Description,Price=@Price,StockQuatntity=@StockQuatntity,CategoryName=@CategoryName,CreatedDate=@CreatedDate)";
+            var response = await context.Connection().ExecuteAsync(cmd, product);
+            if (response == 0) continue;
+            cnt++;
+        }
+        return new Response<string>($"{cnt} - products created successfully");
+    }
+
+    public async Task<Response<string>> UpdateByFileAsync()
+    {
+       const string path = "\"C:\\Users\\Fahriddin\\Desktop\\FileExam\\edit.txt\"";
+       if (File.Exists(path) == false)
+       {
+           return new Response<string>(HttpStatusCode.NotFound, "File not found");
+       }
+
+       var lines = await File.ReadAllLinesAsync(path);
+       if (lines.Length == 0)
+       {
+           return new Response<string>(HttpStatusCode.BadRequest, "File is empty");
+       }
+       var cnt = 0;
+        foreach (var line in lines)
+        {
+            var lineSplit = line.Split(",");
+            var product = new Product()
+            {
+                ProductId = int.Parse(lineSplit[0]),
+                Name = lineSplit[1],
+                Description = lineSplit[2],
+                Price = decimal.Parse(lineSplit[3]),
+                StockQuantity = int.Parse(lineSplit[4]),
+                CategoryName = lineSplit[5],
+                CreatedDate = DateTime.Parse(lineSplit[6])
+            };
+            var result = await UpdateAsync(product);
+            if (result.StatusCode != 200) continue;
+            cnt++;
+        }
+        return new Response<string>($"{cnt} - students updated successfully");
+    }
 }
